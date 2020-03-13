@@ -26,19 +26,93 @@
  * @return length of the file in bytes
  */
 int get_file_length(ifstream *file){
+
 }
 
 
 void Server::initialize(unsigned int board_size,
                         string p1_setup_board,
                         string p2_setup_board){
+    if (board_size == 0 || board_size != BOARD_SIZE){
+        throw ServerException("Player board is the wrong size.");
+    }
+    else if (p1_setup_board.compare("") == 0 || p2_setup_board.compare("") == 0){
+        throw ServerException("Need boards for players");
+    }
+    else{
+        this -> board_size=board_size;
+    }
 }
 
 
 int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
+    string playerNum = to_string(player);
+    string setupBoard = "player_"+playerNum+".setup_board.txt";
+
+    int a = 0;
+
+    if (player < 1 || player > 2){
+        throw ServerException("Need a valid Player # (1 or 2)");
+    }
+
+    else if ((x < 0 || x > board_size) || (y < 0 || y > board_size)){
+        return OUT_OF_BOUNDS;
+    }
+
+    ifstream check;
+    check.open(setupBoard);
+
+    string boardLine;
+    vector<string> lines(board_size, "");
+    while(getline(check, boardLine)){
+        lines[a] = boardLine;
+        cout << lines[a] << endl;
+        a++;
+    }
+    check.close();
+
+    char location = lines[x].at(y);
+    if(location=='B' || location=='C' || location=='D' || location=='R' || location=='S'){
+        return HIT;
+    }
+    else{
+        return MISS;
+    }
+
+
 }
 
 
 int Server::process_shot(unsigned int player) {
-   return NO_SHOT_FILE;
+    if (player < 1 || player > 2) {
+        throw ServerException("Player number incorrect");
+    } else {
+        string playerNum = to_string(player);
+        string shotFile = "player_" + playerNum + ".shot.json";
+
+        int x, y, result;
+        std::ifstream file;
+        file.open(shotFile);
+        if (file) {
+            cereal::JSONInputArchive fin(file);
+            fin(y, x);
+            if ((y < board_size && y >= 0) && (x < board_size && x >= 0)) {
+                result = evaluate_shot(player, x, y);
+            } else {
+                result = OUT_OF_BOUNDS;
+            }
+        } else {
+            return NO_SHOT_FILE;
+        }
+
+        string resultFile = "player_" + playerNum + ".result.json";
+        ofstream finalout;
+        finalout.open(resultFile);
+        {
+            cereal::JSONOutputArchive archive(finalout);
+            archive(CEREAL_NVP(result));
+        }
+        remove(shotFile.c_str());
+        return SHOT_FILE_PROCESSED;
+    }
 }
