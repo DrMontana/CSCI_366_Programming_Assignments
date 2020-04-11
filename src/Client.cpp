@@ -22,32 +22,29 @@ Client::~Client() {
 
 
 void Client::initialize(unsigned int player, unsigned int board_size) {
-
     if (player < 1 || player > 2){
         throw ClientWrongPlayerNumberException();
     }
+    else {
+        this->board_size = board_size;
+        this->player = player;
 
-    this->board_size = board_size;
-    this->player = player;
+        string playerNum = to_string(player);
+        string actionBoard = "player_" + playerNum + ".action_board.json";
 
-    string playerNum = to_string(player);
-    string actionBoard = "player_" + playerNum + ".action_board.json";
+        vector<int> v(this->board_size, 0);
+        vector<vector<int>> board(this->board_size, v);
+        ofstream file;
+        file.open(actionBoard);
 
-    vector<int> across(board_size, 0);
-    vector<vector<int>> coord(board_size, across);
-    ofstream file;
-    file.open(actionBoard, ofstream::out);
-
-    if (file) {
-        cereal::JSONOutputArchive arc(file);
-        arc(CEREAL_NVP(coord));
-
-        file.close();
-        initialized = true;
-    }
-
-    else{
-        cout << "Can't find the file." << endl;
+        if (file) {
+            {
+                cereal::JSONOutputArchive arc(file);
+                arc(CEREAL_NVP(board));
+            }
+            file.close();
+            initialized = true;
+        }
     }
 }
 
@@ -110,13 +107,13 @@ int Client::get_result() {
 
 
 void Client::update_action_board(int result, unsigned int x, unsigned int y) {
-    vector<int> across(board_size, 0);
-    vector<vector<int>> coord(board_size, across);
+    vector<int> v(board_size, 0);
+    vector<vector<int>> board(board_size, v);
 
     string playerNum = to_string(player);
     string actionBoard = "player_" + playerNum + ".action_board.json";
 
-    coord[x][y] = result;
+    board[x][y] = result;
 
     ofstream finalout;
     finalout.open(actionBoard);
@@ -124,15 +121,15 @@ void Client::update_action_board(int result, unsigned int x, unsigned int y) {
     if(finalout.good()){
         {
             cereal::JSONOutputArchive arcin(finalout);
-            arcin(CEREAL_NVP(coord));
+            arcin(CEREAL_NVP(board));
         }
     }
 }
 
 
 string Client::render_action_board(){
-    vector<int> across(board_size, 0);
-    vector<vector<int>> coord(board_size, across);
+    vector<int> v(board_size, 0);
+    vector<vector<int>> board(board_size, v);
 
     string playerNum = to_string(player);
     string actionBoard = "player_" + playerNum + ".action_board.json";
@@ -142,14 +139,14 @@ string Client::render_action_board(){
 
     if(check.good()){
         cereal::JSONInputArchive arc(check);
-        arc(coord);
+        arc(board);
     }
     // Final board output we will be returning as a string
     string endLine;
 
     for (int i = 0; i < board_size; ++i) {
         for (int j = 0; j < board_size; ++j) {
-            string result = to_string(coord[i][j]);
+            string result = to_string(board[i][j]);
             endLine += result;
         }
         endLine += "\n";
