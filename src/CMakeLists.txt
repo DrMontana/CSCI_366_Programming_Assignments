@@ -1,4 +1,4 @@
-#copy the board files into runtime directory
+# copy the board files into runtime directory
 configure_file(${PROJECT_SOURCE_DIR}/player_1.setup_board.txt ${PROJECT_SOURCE_DIR}/cmake-build-debug/src/player_1.setup_board.txt COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/player_2.setup_board.txt ${PROJECT_SOURCE_DIR}/cmake-build-debug/src/player_2.setup_board.txt COPYONLY)
 
