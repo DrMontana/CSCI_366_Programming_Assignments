@@ -26,7 +26,6 @@
  * @return length of the file in bytes
  */
 int get_file_length(ifstream *file){
-
 }
 
 
@@ -45,13 +44,39 @@ void Server::initialize(unsigned int board_size,
 }
 
 
+Server::~Server() {
+}
+
+
+BitArray2D *Server::scan_setup_board(string setup_board_name){//return BitArray2D to initialize arrays
+    //Section to read in file for initialization
+    ifstream fin;
+    fin.open(setup_board_name);
+    string line;
+    vector<string> lines(board_size, "");
+    int i = 0;
+    while (getline(fin, line)) {
+        lines[i] = line;
+        i++;
+    }
+    int rows = lines.size();
+    int cols = lines[0].size();
+    fin.close();
+    //End file read, ready to make arrays
+    BitArray2D *array;
+    array = new BitArray2D(rows,cols);
+
+    return array;
+
+}
+
 int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
     string playerNum = to_string(player);
     string setupBoard = "player_"+playerNum+".setup_board.txt";
 
     int a = 0;
 
-    if (player < 1 || player > 2){
+    if (player < 1 || player > MAX_PLAYERS){
         throw ServerException("Need a valid Player # (1 or 2)");
     }
 
@@ -66,7 +91,6 @@ int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
     vector<string> lines(board_size, "");
     while(getline(check, boardLine)){
         lines[a] = boardLine;
-        cout << lines[a] << endl;
         a++;
     }
     check.close();
@@ -78,8 +102,6 @@ int Server::evaluate_shot(unsigned int player, unsigned int x, unsigned int y) {
     else{
         return MISS;
     }
-
-
 }
 
 
